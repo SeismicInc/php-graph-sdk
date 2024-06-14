@@ -41,13 +41,19 @@ class FacebookCurlHttpClientTest extends AbstractTestHttpClient
     const CURL_VERSION_STABLE = 0x072400;
     const CURL_VERSION_BUGGY = 0x071400;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         if (!extension_loaded('curl')) {
             $this->markTestSkipped('cURL must be installed to test cURL client handler.');
         }
         $this->curlMock = m::mock('Facebook\HttpClients\FacebookCurl');
         $this->curlClient = new FacebookCurlHttpClient($this->curlMock);
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        \Mockery::close();
     }
 
     public function testCanOpenGetCurlConnection()
@@ -252,11 +258,10 @@ class FacebookCurlHttpClientTest extends AbstractTestHttpClient
         $this->assertEquals(200, $response->getHttpResponseCode());
     }
 
-    /**
-     * @expectedException \Facebook\Exceptions\FacebookSDKException
-     */
     public function testThrowsExceptionOnClientError()
     {
+        $this->expectException(\Facebook\Exceptions\FacebookSDKException::class);
+
         $this->curlMock
             ->shouldReceive('init')
             ->once()

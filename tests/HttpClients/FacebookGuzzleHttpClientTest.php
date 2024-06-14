@@ -23,17 +23,17 @@
  */
 namespace Facebook\Tests\HttpClients;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use Mockery as m;
 use Facebook\HttpClients\FacebookGuzzleHttpClient;
-use GuzzleHttp\Message\Request;
-use GuzzleHttp\Message\Response;
-use GuzzleHttp\Stream\Stream;
 use GuzzleHttp\Exception\RequestException;
 
 class FacebookGuzzleHttpClientTest extends AbstractTestHttpClient
 {
     /**
-     * @var \GuzzleHttp\Client
+     * @var Client
      */
     protected $guzzleMock;
 
@@ -42,18 +42,22 @@ class FacebookGuzzleHttpClientTest extends AbstractTestHttpClient
      */
     protected $guzzleClient;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->guzzleMock = m::mock('GuzzleHttp\Client');
         $this->guzzleClient = new FacebookGuzzleHttpClient($this->guzzleMock);
     }
 
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        \Mockery::close();
+    }
+
     public function testCanSendNormalRequest()
     {
         $request = new Request('GET', 'http://foo.com');
-
-        $body = Stream::factory($this->fakeRawBody);
-        $response = new Response(200, $this->fakeHeadersAsArray, $body);
+        $response = new Response(200, $this->fakeHeadersAsArray, $this->fakeRawBody);
 
         $this->guzzleMock
             ->shouldReceive('createRequest')
@@ -92,16 +96,15 @@ class FacebookGuzzleHttpClientTest extends AbstractTestHttpClient
         $response = $this->guzzleClient->send('http://foo.com/', 'GET', 'foo_body', ['X-foo' => 'bar'], 123);
 
         $this->assertInstanceOf('Facebook\Http\GraphRawResponse', $response);
-        $this->assertEquals($this->fakeRawBody, $response->getBody());
+        $this->assertJsonStringEqualsJsonString($this->fakeRawBody, $response->getBody());
         $this->assertEquals($this->fakeHeadersAsArray, $response->getHeaders());
         $this->assertEquals(200, $response->getHttpResponseCode());
     }
 
-    /**
-     * @expectedException \Facebook\Exceptions\FacebookSDKException
-     */
     public function testThrowsExceptionOnClientError()
     {
+        $this->expectException(\Facebook\Exceptions\FacebookSDKException::class);
+
         $request = new Request('GET', 'http://foo.com');
 
         $this->guzzleMock

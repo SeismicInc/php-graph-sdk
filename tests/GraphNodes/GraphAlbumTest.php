@@ -25,8 +25,9 @@ namespace Facebook\Tests\GraphNodes;
 
 use Mockery as m;
 use Facebook\GraphNodes\GraphNodeFactory;
+use PHPUnit\Framework\TestCase;
 
-class GraphAlbumTest extends \PHPUnit_Framework_TestCase
+class GraphAlbumTest extends TestCase
 {
 
     /**
@@ -34,9 +35,15 @@ class GraphAlbumTest extends \PHPUnit_Framework_TestCase
      */
     protected $responseMock;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->responseMock = m::mock('\\Facebook\\FacebookResponse');
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        \Mockery::close();
     }
 
     public function testDatesGetCastToDateTime()
